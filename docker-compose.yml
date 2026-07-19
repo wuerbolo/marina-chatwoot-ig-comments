@@ -1,0 +1,27 @@
+services:
+  ig-comments-service:
+    build: .
+    container_name: ig-comments-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    # Con NPM (Nginx Proxy Manager) como reverse proxy, no publiques el puerto al host:
+    # conecta este contenedor a la misma red Docker que usa NPM (ver SETUP.md, sección 5.2)
+    # y configura el Proxy Host en NPM apuntando a "ig-comments-service" puerto 8000.
+    # Descomenta "ports" solo para pruebas locales sin NPM por delante.
+    # ports:
+    #   - "8000:8000"
+    networks:
+      - npm_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  npm_network:
+    # Red externa donde vive Nginx Proxy Manager. Confirma el nombre real con
+    # `docker network ls` en la VPS y reemplázalo aquí (ver SETUP.md, sección 5.2).
+    external: true
