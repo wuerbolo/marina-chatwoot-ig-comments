@@ -31,10 +31,17 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks) -
         logger.warning("Firma inválida en webhook de Meta")
         return Response(status_code=403)
 
-    background_tasks.add_task(relay_to_chatwoot, body, signature)
-
     payload = await request.json()
-    for entry in payload.get("entry", []):
+    entries = payload.get("entry", [])
+
+    # Chatwoot solo sabe procesar eventos de mensajería (entry[].messaging);
+    # un evento de comments/live_comments (entry[].changes) le hace lanzar
+    # NoMethodError en Webhooks::InstagramEventsJob. Reenviamos solo lo que
+    # Chatwoot puede digerir.
+    if any("messaging" in entry for entry in entries):
+        background_tasks.add_task(relay_to_chatwoot, body, signature)
+
+    for entry in entries:
         for change in entry.get("changes", []):
             if change.get("field") != "comments":
                 continue
