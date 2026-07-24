@@ -8,7 +8,7 @@ os.environ.setdefault("CHATWOOT_BASE_URL", "https://chatwoot.example.com")
 os.environ.setdefault("CHATWOOT_ACCOUNT_ID", "1")
 os.environ.setdefault("CHATWOOT_API_ACCESS_TOKEN", "test-cw-token")
 os.environ.setdefault("CHATWOOT_INBOX_ID_COMENTARIOS", "1")
-os.environ.setdefault("CHATWOOT_WEBHOOK_SECRET", "test-cw-secret")
+os.environ.setdefault("CHATWOOT_INBOX_WEBHOOK_SECRET", "test-cw-secret")
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 
 import pytest

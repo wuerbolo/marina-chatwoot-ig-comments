@@ -119,14 +119,31 @@ Profile → Access Token de un usuario de servicio (o el token de la cuenta) →
 
 ### 4.3 Webhook saliente
 
-Settings → Integrations → Webhooks → Add Webhook:
-- URL: `https://ig-comments.tudominio.com/webhooks/chatwoot/outgoing`
-- Evento: `message_created`
+**No uses el webhook de cuenta** (Settings → Integrations → Webhooks). Ese dispara para
+todos los inboxes de la cuenta y obliga a filtrar por `inbox_id` en el código — y si algún
+día hay más de un inbox de tipo API, mezclaría eventos de todos por el mismo canal.
 
-Chatwoot genera un secreto de firma para el webhook al crearlo (o al crear el inbox API,
-según versión) — cópialo en `CHATWOOT_WEBHOOK_SECRET`. Si tu versión de Chatwoot no
-muestra un secreto de firma para webhooks salientes, dímelo y ajusto `security.py` para no
-depender de una firma que no existe en esa versión (actualmente el servicio la exige).
+Usa en su lugar el webhook propio del inbox "Comentarios IG":
+
+- Settings → Inboxes → Comentarios IG → Configuration → **Webhook URL**:
+  `https://ig-comments.tudominio.com/webhooks/chatwoot/outgoing`
+
+Este webhook solo se dispara para eventos de este inbox (Chatwoot lo restringe a
+`channel_type == 'Channel::Api'`), así que no hace falta ningún filtro adicional.
+
+El secreto de firma **no se muestra en esa pantalla** (Chatwoot solo enseña ahí el
+`hmac_token`, que es para otra cosa: validar `identifier_hash` de contactos creados por
+esta misma API, no para firmar el webhook saliente). Hay que pedirlo por API, como
+administrador de la cuenta:
+
+```bash
+curl -s -H "api_access_token: $CHATWOOT_API_ACCESS_TOKEN" \
+  "$CHATWOOT_BASE_URL/api/v1/accounts/$CHATWOOT_ACCOUNT_ID/inboxes/$CHATWOOT_INBOX_ID_COMENTARIOS" \
+  | grep -o '"secret":"[^"]*"'
+```
+
+Copia ese valor en `CHATWOOT_INBOX_WEBHOOK_SECRET`. Si alguna vez hay que rotarlo, existe
+`POST .../inboxes/{id}/reset_secret`.
 
 ## 5. Despliegue en la VPS
 

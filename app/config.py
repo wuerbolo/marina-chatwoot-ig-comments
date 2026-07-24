@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     chatwoot_account_id: str
     chatwoot_api_access_token: str
     chatwoot_inbox_id_comentarios: str
-    chatwoot_webhook_secret: str
+    chatwoot_inbox_webhook_secret: str
 
     database_url: str
 
