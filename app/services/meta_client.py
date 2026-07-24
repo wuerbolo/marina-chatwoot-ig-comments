@@ -2,7 +2,7 @@ import httpx
 
 from app.config import settings
 
-GRAPH_BASE_URL = "https://graph.facebook.com"
+GRAPH_BASE_URL = "https://graph.instagram.com"
 
 
 class MetaApiError(Exception):
