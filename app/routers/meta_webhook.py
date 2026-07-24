@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Request, Response
 from app.config import settings
 from app.security import verify_meta_signature
 from app.services.comment_service import process_incoming_comment
+from app.services.instagram_relay import relay_to_chatwoot
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/webhooks/meta", tags=["meta"])
@@ -29,6 +30,8 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks) -
     if not verify_meta_signature(body, signature, settings.meta_app_secret):
         logger.warning("Firma inválida en webhook de Meta")
         return Response(status_code=403)
+
+    background_tasks.add_task(relay_to_chatwoot, body, signature)
 
     payload = await request.json()
     for entry in payload.get("entry", []):
