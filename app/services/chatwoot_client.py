@@ -31,8 +31,11 @@ async def _request(method: str, path: str, **kwargs) -> dict:
 
 
 async def find_or_create_contact(igsid: str, name: str | None) -> dict:
-    """POST contacts — devuelve contact_id y source_id de la sesión."""
-    return await _request(
+    """POST contacts — devuelve contact_id y source_id de la sesión.
+
+    A diferencia de /conversations y /messages, Chatwoot envuelve la
+    respuesta de /contacts en payload.contact."""
+    response = await _request(
         "POST",
         _accounts_path("/contacts"),
         json={
@@ -41,6 +44,7 @@ async def find_or_create_contact(igsid: str, name: str | None) -> dict:
             "identifier": igsid,
         },
     )
+    return response["payload"]["contact"]
 
 
 async def create_conversation(source_id: str, contact_id: int) -> dict:
