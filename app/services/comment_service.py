@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.exc import IntegrityError
 
+from app.config import settings
 from app.db import get_session
 from app.models import IgCommentTicket
 from app.services import chatwoot_client, meta_client
@@ -53,7 +54,20 @@ async def process_incoming_comment(change_value: dict) -> None:
 
         contact = await chatwoot_client.find_or_create_contact(igsid, username)
         contact_id = contact["id"]
-        source_id = contact["contact_inboxes"][0]["source_id"]
+        contact_inbox = next(
+            (
+                ci
+                for ci in contact.get("contact_inboxes", [])
+                if str(ci.get("inbox", {}).get("id")) == str(settings.chatwoot_inbox_id_comentarios)
+            ),
+            None,
+        )
+        if contact_inbox is None:
+            raise RuntimeError(
+                f"El contacto {contact_id} no tiene contact_inbox en el inbox "
+                f"{settings.chatwoot_inbox_id_comentarios} (comment_id={comment_id})"
+            )
+        source_id = contact_inbox["source_id"]
 
         conversation = await chatwoot_client.create_conversation(source_id, contact_id)
         conversation_id = conversation["id"]

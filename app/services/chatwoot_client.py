@@ -34,17 +34,30 @@ async def find_or_create_contact(igsid: str, name: str | None) -> dict:
     """POST contacts — devuelve contact_id y source_id de la sesión.
 
     A diferencia de /conversations y /messages, Chatwoot envuelve la
-    respuesta de /contacts en payload.contact."""
-    response = await _request(
-        "POST",
-        _accounts_path("/contacts"),
-        json={
-            "inbox_id": settings.chatwoot_inbox_id_comentarios,
-            "name": name or igsid,
-            "identifier": igsid,
-        },
-    )
-    return response["payload"]["contact"]
+    respuesta de /contacts en payload.contact. Si el identifier ya existe
+    (mismo usuario comentó antes, o ya es contacto de otro canal como el
+    de DM), Chatwoot devuelve 422 — en ese caso buscamos el contacto ya
+    existente en vez de fallar."""
+    try:
+        response = await _request(
+            "POST",
+            _accounts_path("/contacts"),
+            json={
+                "inbox_id": settings.chatwoot_inbox_id_comentarios,
+                "name": name or igsid,
+                "identifier": igsid,
+            },
+        )
+        return response["payload"]["contact"]
+    except ChatwootApiError as error:
+        if error.status_code != 422:
+            raise
+
+    search = await _request("GET", _accounts_path("/contacts/search"), params={"q": igsid})
+    for contact in search.get("payload", []):
+        if contact.get("identifier") == igsid:
+            return contact
+    raise ChatwootApiError(422, {"message": f"Identifier duplicado pero no encontrado en la búsqueda: {igsid}"})
 
 
 async def create_conversation(source_id: str, contact_id: int) -> dict:
