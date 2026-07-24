@@ -25,6 +25,13 @@ async def receive_webhook(request: Request, background_tasks: BackgroundTasks) -
     if payload.get("message_type") != "outgoing":
         return Response(status_code=200)
 
+    # Las notas privadas (incl. las que crea reply_service.py al fallar un
+    # envío) también son message_type="outgoing" — sin este filtro, cada nota
+    # de error dispara este mismo webhook otra vez, reintenta el envío,
+    # vuelve a fallar y crea otra nota: bucle infinito.
+    if payload.get("private"):
+        return Response(status_code=200)
+
     conversation = payload.get("conversation") or {}
     if str(conversation.get("inbox_id")) != str(settings.chatwoot_inbox_id_comentarios):
         return Response(status_code=200)
