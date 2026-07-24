@@ -14,8 +14,9 @@ router = APIRouter(prefix="/webhooks/chatwoot", tags=["chatwoot"])
 async def receive_webhook(request: Request, background_tasks: BackgroundTasks) -> Response:
     body = await request.body()
     signature = request.headers.get("X-Chatwoot-Signature")
+    timestamp = request.headers.get("X-Chatwoot-Timestamp")
 
-    if not verify_chatwoot_signature(body, signature, settings.chatwoot_webhook_secret):
+    if not verify_chatwoot_signature(body, timestamp, signature, settings.chatwoot_webhook_secret):
         logger.warning("Firma inválida en webhook saliente de Chatwoot")
         return Response(status_code=403)
 
