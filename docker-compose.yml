@@ -12,7 +12,7 @@ services:
     # ports:
     #   - "8000:8000"
     networks:
-      - npm_network
+      - proxy-network
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
@@ -21,7 +21,6 @@ services:
       start_period: 10s
 
 networks:
-  npm_network:
-    # Red externa donde vive Nginx Proxy Manager. Confirma el nombre real con
-    # `docker network ls` en la VPS y reemplázalo aquí (ver SETUP.md, sección 5.2).
+  proxy-network:
+    # Red externa compartida con NPM, Mautic, stripe-mautic-webhook y Chatwoot.
     external: true
