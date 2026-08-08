@@ -20,6 +20,6 @@ app.include_router(meta_webhook.router)
 app.include_router(chatwoot_webhook.router)
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 async def health() -> dict:
     return {"status": "ok"}
